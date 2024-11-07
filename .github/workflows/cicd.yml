@@ -1,0 +1,50 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Tests
+        run: npm test
+
+      - name: Build Docker Image
+        run: docker build -t your-dockerhub-Puneet9411/2048:latest .
+
+      - name: Push Docker Image
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.Puneet9411 }}
+          DOCKER_HUB_PASSWORD: ${{ secrets.PASSWORD }}
+        run: |
+          echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
+          docker push your-dockerhub-username/2048:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Heroku
+        
+        run: |
+          heroku container:
+          heroku container:push web --app 2048
+          heroku container:release web --app 2048
