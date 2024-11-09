@@ -1,0 +1,78 @@
+Script for automation
+
+1. ci_cd_pipeline.sh - This script performs CI/CD pipeline tasks: cloning the repo, building, testing, and preparing the Docker container.
+
+
+#!/bin/bash
+
+#variables
+REPO_URL="https://github.com/Puneet2611/Lens-assignment.git"
+APP_DIR="/path/to/app"
+IMAGE_NAME="lens-assignment-app"
+
+# Clone the repository
+echo "Cloning repository..."
+git clone $REPO_URL $APP_DIR
+cd $APP_DIR
+
+# Build the application
+echo "Building the application..."
+npm install
+
+# Run tests
+echo "Running tests..."
+npm test
+
+# Build Docker image
+echo "Building Docker image..."
+docker build -t $IMAGE_NAME .
+
+echo "CI/CD pipeline tasks completed."
+2. deploy_docker.sh - This script automates the Docker container deployment on an AWS EC2 instance using SSH.
+
+#!/bin/bash
+
+#variables
+IMAGE_NAME="lens-assignment-app"
+EC2_USER="ec2-user" 
+EC2_HOST="ec2-instance-ip" 
+SSH_KEY="/path/to/private-key.pem" 
+REMOTE_DIR="/path/on/remote/instance" 
+
+# Push the Docker image to the EC2 instance
+echo "Saving Docker image as tar file..."
+docker save $IMAGE_NAME | gzip > ${IMAGE_NAME}.tar.gz
+
+echo "Copying image to EC2 instance..."
+scp -i $SSH_KEY ${IMAGE_NAME}.tar.gz ${EC2_USER}@${EC2_HOST}:${REMOTE_DIR}
+
+# SSH into the EC2 instance and load/start the Docker container
+echo "Deploying Docker container on EC2..."
+ssh -i $SSH_KEY ${EC2_USER}@${EC2_HOST} << EOF
+    cd $REMOTE_DIR
+    echo "Loading Docker image..."
+    gunzip -c ${IMAGE_NAME}.tar.gz | docker load
+    
+    echo "Starting Docker container..."
+    docker run -d -p 80:8181 $IMAGE_NAME
+
+    echo "Deployment completed successfully."
+EOF
+
+# Clean up local tar file
+rm ${IMAGE_NAME}.tar.gz
+echo "Deployment script completed."
+
+3. start_pipeline.sh - This script runs the CI/CD pipeline script and the deployment script sequentially.
+
+#!/bin/bash
+
+# Run the CI/CD pipeline script
+echo "Starting CI/CD pipeline..."
+./ci_cd_pipeline.sh
+
+# Run the deployment script
+echo "Starting deployment..."
+./deploy_docker.sh
+
+echo "Pipeline and deployment completed."
