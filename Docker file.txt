@@ -1,0 +1,19 @@
+FROM node:16  //official Node.js image
+
+WORKDIR /usr/src/app //working directory 
+
+COPY package*.json ./  //copy the files
+
+RUN npm install //Install dependencies
+
+COPY . .      //copy the application files to Working Directory
+
+EXPOSE 8181  //application port
+
+CMD ["npm", "start"]    //command to run the application
+
+
+
+Docker Link
+
+Docker pull puneetbisht/2048-game:latest
