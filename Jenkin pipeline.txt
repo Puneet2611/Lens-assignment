@@ -1,0 +1,83 @@
+pipeline {
+    agent any
+    
+    environment {
+        GIT_REPO = 'https://github.com/Puneet2611/Lens-assignment.git'
+        EMAIL_RECIPIENTS = 'puneet2bisht4@gmail.com' 
+        EC2_USER = 'ec2-user' 
+        EC2_HOST = 'ec2-instance-ip-or-hostname' 
+        SSH_KEY = '/path/to/private-key.pem'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building the application...'
+                "sh 'npm install' "
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+                "sh 'npm test' "
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying application to AWS EC2 instance...' 
+    // SSH into the EC2 instance and deploy the application 
+
+    sh " " " 
+ssh -i ${SSH_KEY} ${EC2_USER}@${EC2_HOST} << EOF 
+
+# Navigate to the deployment directory 
+cd /path/to/application 
+
+# Pull the latest changes if the app is stored in 
+Git git pull origin main 
+
+npm install //Installs any required packages
+pm2 restart app_name  //Restarts the application
+
+EOF 
+
+" " "
+            }
+        }
+    }
+
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+            mail bcc: '', 
+                 body: "The Jenkins pipeline completed successfully.\n\nStage: Build and Deploy\nProject: ${GIT_REPO}", 
+                 cc: '', 
+                 from: '', 
+                 replyTo: '', 
+                 subject: "Jenkins Build Success: ${GIT_REPO}", 
+                 to: "${EMAIL_RECIPIENTS}"
+        }
+        failure {
+            echo 'Pipeline failed.'
+            mail bcc: '', 
+                 body: "The Jenkins pipeline has failed.\n\nStage: Build and Deploy\nProject: ${GIT_REPO}", 
+                 cc: '', 
+                 from: '', 
+                 replyTo: '', 
+                 subject: "Jenkins Build Failure: ${GIT_REPO}", 
+                 to: "${EMAIL_RECIPIENTS}"
+        }
+        always {
+            echo 'Pipeline execution completed.'
+        }
+    }
+}
